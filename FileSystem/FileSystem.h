@@ -1,7 +1,10 @@
 #pragma once
 #include <string>
+#include <unordered_map>
+#include <vector>
 #include "BlockDevice.h"
 #include "Inode.h"
+#include "PathException.h"
 
 typedef size_t offset_t;
 
@@ -9,16 +12,34 @@ class FileSystem
 {
 public:
 	// C'tor
-	FileSystem(const std::string& fileName);
+	FileSystem(const std::string& deviceName);
 
+	// Inode with index accessing
+	Inode GetInodeFromIndex(offset_t index);
+	offset_t GetInodeOffsetFromIndex(const offset_t index);
+	void SetInodeFromIndex(const offset_t index, const Inode& inode);
+
+	// Inode with offset accessing
 	Inode GetInodeFromOffset(const offset_t offset);
 	offset_t GetFreeInodeOffset();
+	offset_t GetInodeIndexFromOffset(const offset_t offset);
 	void SetInodeFromOffset(const offset_t offset, const Inode& inode);
+	size_t GetNumOfBlocksFromInodeOffset(const offset_t offset);
+	void SetInodeContent(const offset_t inodesOffset, const std::vector<byte>& content);
 
+	// Block with offset accesing
 	offset_t GetFreeBlockOffset();
-	void WriteIntoBlock(const byte* const data, const offset_t offset, const size_t count);
+	offset_t GetBlockOffsetFromIndex(const offset_t index);
+	void WriteIntoBlockFromOffset(const byte* const data, const offset_t offset, const size_t count);
+	void SetBlockStateByOffset(const bool isTaken, const offset_t offset);
+	// Block with index accesing
+	void WriteIntoBlockFromIndex(const byte* const data, const offset_t index, const size_t count);
+	offset_t GetBlockIndexFromOffset(const offset_t offset);
+	void SetBlockStateByIndex(const bool isTaken, const offset_t index);
 
-	void SetBlockStateByOffset(const bool state, const offset_t offset);
+	offset_t CreateFile(const std::string& fileName, const offset_t indexOfDirInode);
+	std::unordered_map<std::string, size_t> GetFilesFromDir(const offset_t indexOfDirInode);
+	std::vector<byte> GetInodesBlocksContent(const offset_t inodesOffset);
 
 private:
 	BlockDevice m_blockDevice;

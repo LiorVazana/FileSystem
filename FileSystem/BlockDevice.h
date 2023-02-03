@@ -9,14 +9,14 @@ class BlockDevice
 {
 public:
 	// C'tor
-	BlockDevice(const std::string& fileName, const size_t size);
+	BlockDevice(const std::string& deviceName, const size_t size);
 
 	void Write(const byte* const buff, const size_t offset, const size_t count);
 	void Read(byte* const buff, const size_t offset, const size_t count);
 
 
 private:
-	std::string m_fileName;
+	std::string m_deviceName;
 	size_t m_size;
-	std::fstream m_fileStream;
+	std::fstream m_deviceStream;
 };

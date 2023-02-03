@@ -142,6 +142,7 @@
     <ClInclude Include="BlockDevice.h" />
     <ClInclude Include="FileSystem.h" />
     <ClInclude Include="FileSystemException.h" />
+    <ClInclude Include="PathException.h" />
     <ClInclude Include="Inode.h" />
     <ClInclude Include="InvalidInput.h" />
   </ItemGroup>
