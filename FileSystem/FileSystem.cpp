@@ -75,11 +75,13 @@ size_t FileSystem::GetNumOfBlocksFromInodeOffset(const offset_t offset)
 	return std::ceil((double)inode.Length / SIZE_OF_BLOCK);
 }
 
-void FileSystem::SetInodeContent(const offset_t inodesOffset, const std::vector<byte>& content)
+void FileSystem::SetInodeContent(const offset_t inodesOffset, const std::vector<byte>& contentVec)
 {
 	Inode inode = GetInodeFromOffset(inodesOffset);
 	size_t numOfBlocks = GetNumOfBlocksFromInodeOffset(inodesOffset);
-	size_t length = content.size();
+	size_t length = contentVec.size();
+	const byte* content = contentVec.data();
+	size_t contentIndex = 0;
 
 	for (int i = 0; i < numOfBlocks; ++i)
 	{
@@ -88,13 +90,17 @@ void FileSystem::SetInodeContent(const offset_t inodesOffset, const std::vector<
 
 	size_t blockNeeded = std::ceil((double)length / SIZE_OF_BLOCK);
 
-	for (int i = 0; i < blockNeeded; ++i)
+	for (int i = 0; i < blockNeeded-1; ++i)
 	{
 		offset_t blockOffset = GetFreeBlockOffset();
-		if()
-		m_blockDevice.Write(content.data(), blockOffset, );
+		m_blockDevice.Write(content + (SIZE_OF_BLOCK * i), blockOffset, SIZE_OF_BLOCK);
 	}
 
+	if (blockNeeded > 1 && (double)length / SIZE_OF_BLOCK == blockNeeded)
+	{
+		offset_t blockOffset = GetFreeBlockOffset();
+		m_blockDevice.Write(content + (SIZE_OF_BLOCK * (blockNeeded - 1)), blockOffset, SIZE_OF_BLOCK * ((double)length / SIZE_OF_BLOCK));
+	}
 }
 
 offset_t FileSystem::GetFreeBlockOffset()

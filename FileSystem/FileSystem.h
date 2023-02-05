@@ -25,7 +25,7 @@ public:
 	offset_t GetInodeIndexFromOffset(const offset_t offset);
 	void SetInodeFromOffset(const offset_t offset, const Inode& inode);
 	size_t GetNumOfBlocksFromInodeOffset(const offset_t offset);
-	void SetInodeContent(const offset_t inodesOffset, const std::vector<byte>& content);
+	void SetInodeContent(const offset_t inodesOffset, const std::vector<byte>& contentVec);
 
 	// Block with offset accesing
 	offset_t GetFreeBlockOffset();
