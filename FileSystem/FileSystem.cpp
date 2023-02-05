@@ -158,36 +158,66 @@ void FileSystem::SetBlockStateByIndex(const bool state, const offset_t index)
 	SetBlockStateByOffset(state, offset);
 }
 
-offset_t FileSystem::CreateFile(const std::string& fileName, offset_t indexOfDirInode)
-{
-	if (indexOfDirInode < 0 || indexOfDirInode >= NUM_OF_INODES)
-		throw InvalidInput("Index of the directory is out of bounds.");
-
-	if (GetInodeFromIndex(indexOfDirInode).InodeType != InodeType::DIR)
-		throw InvalidInput("Index of the the inode isn't a directory inode.");
-	
+offset_t FileSystem::CreateDirEntry(const std::string& entryName, const bool isDir, const offset_t indexOfDirInode)
+{	
+	// read the dir that should contain the file and search for one with the same name
 	Inode dirInode = GetInodeFromIndex(indexOfDirInode);
 	std::unordered_map<std::string, size_t> dirEntries = GetFilesFromDir(indexOfDirInode);
 
-	// read the dir that should contain the file and search for one with the same name
-	if (dirEntries.count(fileName) != 0)
+	if (dirEntries.count(entryName) != 0)
 		throw PathException("File with this name is already exist.");
 
-
-
 	// update the dir that should contain the file by adding the new file name with his suitable inode
+	offset_t newInodeOffset = GetFreeInodeOffset();
+	Inode newInode = GetInodeFromOffset(newInodeOffset);
 
-	offset_t newInodeoffset = GetFreeInodeOffset();
-	Inode newInode = GetInodeFromOffset(newInodeoffset);
-	newInode.InodeType == InodeType::FILE;
+	newInode.InodeType = isDir ? InodeType::DIR : InodeType::FILE;
+	dirEntries[entryName] == GetInodeIndexFromOffset(newInodeOffset);
+
 	newInode.DateCreated = time(nullptr);
 	newInode.LastModified = time(nullptr);
 
-	SetInodeFromOffset(newInodeoffset, newInode);
+	SetFilesToDir(dirEntries, indexOfDirInode);
+	SetInodeFromOffset(newInodeOffset, newInode);
+}
+
+void FileSystem::SetFilesToDir(const std::unordered_map<std::string, size_t>& dirEntries, const size_t dirInodeIndex)
+{
+	if (GetInodeFromIndex(dirInodeIndex).InodeType != InodeType::DIR)
+		throw InvalidInput("Index of the the inode isn't a directory inode.");
+
+	std::vector<byte> dirRawContent;
+	std::string name;
+	size_t inodeIndex;
+
+	for (const auto& pair : dirEntries)
+	{
+		name = pair.first;
+		inodeIndex = pair.second;
+
+		for (const byte b : name)
+		{
+			dirRawContent.push_back(b);
+		}
+
+		dirRawContent.push_back('\0');
+
+		byte* inodeIndexPtr = reinterpret_cast<byte*>(&inodeIndex);
+
+		for (int i = 0; i < sizeof(inodeIndex); ++i)
+		{
+			dirRawContent.push_back(inodeIndexPtr[i]);
+		}
+	}
+
+	SetInodeContent(GetInodeOffsetFromIndex(inodeIndex), dirRawContent);
 }
 
 std::unordered_map<std::string, size_t> FileSystem::GetFilesFromDir(const offset_t indexOfDirInode)
 {
+	if (GetInodeFromIndex(indexOfDirInode).InodeType != InodeType::DIR)
+		throw InvalidInput("Index of the the inode isn't a directory inode.");
+
 	std::vector<byte> content = GetInodesBlocksContent(indexOfDirInode);
 	std::unordered_map<std::string, size_t> dirEntries;
 	size_t i = 0;

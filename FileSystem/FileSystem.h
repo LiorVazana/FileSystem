@@ -37,7 +37,8 @@ public:
 	offset_t GetBlockIndexFromOffset(const offset_t offset);
 	void SetBlockStateByIndex(const bool isTaken, const offset_t index);
 
-	offset_t CreateFile(const std::string& fileName, const offset_t indexOfDirInode);
+	offset_t CreateDirEntry(const std::string& entryName, const bool isDir, const offset_t indexOfDirInode);
+	void SetFilesToDir(const std::unordered_map<std::string, size_t>& dirEntries, const size_t dirInodeIndex);
 	std::unordered_map<std::string, size_t> GetFilesFromDir(const offset_t indexOfDirInode);
 	std::vector<byte> GetInodesBlocksContent(const offset_t inodesOffset);
 
