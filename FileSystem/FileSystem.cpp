@@ -28,15 +28,28 @@ std::vector<std::string> FileSystem::GetDirEntries(const std::string& path)
 	size_t inodeIndex = GetInodeIndexFromPath(path);
 	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir(inodeIndex);
 
-	for (const auto& pair : dirEnries)
+	for (const auto& pair : dirEntries)
 	{
-		entries.push_back(pair.first);
+		if(GetInodeFromIndex(pair.second).InodeType == InodeType::DIR)
+			entries.push_back(pair.first + "/");
+		else
+			entries.push_back(pair.first);
 	}
 
 	return entries;
 }
 
-Inode FileSystem::GetInodeFromIndex(offset_t index)
+std::vector<byte> FileSystem::GetFileContent(const std::string& path)
+{
+	return GetInodesBlocksContent(GetInodeOffsetFromIndex(GetInodeIndexFromPath(path)));
+}
+
+void FileSystem::SetFileContent(const std::string& path, const std::vector<byte>& data)
+{
+	SetInodeContent(GetInodeOffsetFromIndex(GetInodeIndexFromPath(path)), data);
+}
+
+Inode FileSystem::GetInodeFromIndex(const offset_t index)
 {
 	if (index >= NUM_OF_INODES || index < 0)
 		throw InvalidInput("given index is out of bounds (must be between 0 to " + std::to_string(NUM_OF_INODES));
@@ -315,7 +328,7 @@ size_t FileSystem::GetInodeIndexFromPath(const std::string& path, const size_t i
 	if (beforeSep.empty())
 		return GetInodeIndexFromPath(afterSep, inodeIndex);
 
-	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir();
+	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir(inodeIndex);
 
 	if (dirEntries.count(beforeSep) == 0)
 		throw PathException("Unknown entry '" + beforeSep + "'");

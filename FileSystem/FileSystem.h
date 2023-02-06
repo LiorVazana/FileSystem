@@ -14,12 +14,14 @@ public:
 	// C'tor
 	FileSystem(const std::string& deviceName);
 
-	void CreateDirEntry(const std::string& path, const bool isDir);
-	std::vector<std::string> GetDirEntries(const std::string& path);
+	void CreateDirEntry(const std::string& path, const bool isDir);                  // Create file / directory
+	std::vector<std::string> GetDirEntries(const std::string& path);                 // Get all files in given directory
+	std::vector<byte> GetFileContent(const std::string& path);                       // Get the file content
+	void SetFileContent(const std::string& path, const std::vector<byte>& data);     // Update the file contant
 
 private:
 	// Inode with index accessing
-	Inode GetInodeFromIndex(offset_t index);
+	Inode GetInodeFromIndex(const offset_t index);
 	offset_t GetInodeOffsetFromIndex(const offset_t index);
 	void SetInodeFromIndex(const offset_t index, const Inode& inode);
 
