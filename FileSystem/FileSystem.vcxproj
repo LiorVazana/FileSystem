@@ -145,11 +145,16 @@
     <ClInclude Include="PathException.h" />
     <ClInclude Include="Inode.h" />
     <ClInclude Include="InvalidInput.h" />
+    <ClInclude Include="Shell.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BlockDevice.cpp" />
     <ClCompile Include="FileSystem.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Shell.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BlockDev.bd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -12,12 +12,13 @@ class FileSystem
 {
 public:
 	// C'tor
-	FileSystem(const std::string& deviceName);
+	FileSystem(const std::string& devicePath);
 
 	void CreateDirEntry(const std::string& path, const bool isDir);                  // Create file / directory
 	std::vector<std::string> GetDirEntries(const std::string& path);                 // Get all files in given directory
 	std::vector<byte> GetFileContent(const std::string& path);                       // Get the file content
 	void SetFileContent(const std::string& path, const std::vector<byte>& data);     // Update the file contant
+	bool IsDir(const std::string& path);                                             // check if the entry is directory
 
 private:
 	// Inode with index accessing
@@ -37,11 +38,11 @@ private:
 	offset_t GetFreeBlockOffset();
 	offset_t GetBlockOffsetFromIndex(const offset_t index);
 	void WriteIntoBlockFromOffset(const byte* const data, const offset_t offset, const size_t count);
-	void SetBlockStateByOffset(const bool isTaken, const offset_t offset);
+	void SetBlockStateByOffset(const bool isFree, const offset_t offset);
 	// Block with index accesing
 	void WriteIntoBlockFromIndex(const byte* const data, const offset_t index, const size_t count);
 	offset_t GetBlockIndexFromOffset(const offset_t offset);
-	void SetBlockStateByIndex(const bool isTaken, const offset_t index);
+	void SetBlockStateByIndex(const bool isFree, const offset_t index);
 
 	void CreateDirEntry(const std::string& entryName, const bool isDir, const offset_t indexOfDirInode);
 	void SetFilesToDir(const std::unordered_map<std::string, size_t>& dirEntries, const size_t dirInodeIndex);

@@ -1,11 +1,11 @@
 #include "FileSystem.h"
 
-FileSystem::FileSystem(const std::string& deviceName)
-	:	m_blockDevice(deviceName, BLOCK_DEVICE_SIZE)
+FileSystem::FileSystem(const std::string& devicePath)
+	:	m_blockDevice(devicePath, BLOCK_DEVICE_SIZE)
 {
 	Inode defaultInode;
 	Inode firstDir;
-	firstDir.InodeType == InodeType::DIR;
+	firstDir.InodeType = InodeType::DIR;
 
 	m_blockDevice.Write(reinterpret_cast<byte*>(&firstDir), 0, sizeof(Inode));
 
@@ -14,7 +14,7 @@ FileSystem::FileSystem(const std::string& deviceName)
 		m_blockDevice.Write(reinterpret_cast<byte*>(&defaultInode), i * sizeof(Inode), sizeof(Inode));
 	}
 
-	byte isBlockFree = 0;
+	byte isBlockFree = 1;
 
 	for (int i = 0; i < NUM_OF_BLOCKS; ++i)
 	{
@@ -47,6 +47,11 @@ std::vector<byte> FileSystem::GetFileContent(const std::string& path)
 void FileSystem::SetFileContent(const std::string& path, const std::vector<byte>& data)
 {
 	SetInodeContent(GetInodeOffsetFromIndex(GetInodeIndexFromPath(path)), data);
+}
+
+bool FileSystem::IsDir(const std::string& path)
+{
+	return GetInodeFromIndex(GetInodeIndexFromPath(path)).InodeType == InodeType::DIR;
 }
 
 Inode FileSystem::GetInodeFromIndex(const offset_t index)
@@ -112,22 +117,22 @@ void FileSystem::SetInodeContent(const offset_t inodesOffset, const std::vector<
 
 	for (int i = 0; i < numOfBlocks; ++i)
 	{
-		SetBlockStateByIndex(false, inode.Blocks[i]);
+		SetBlockStateByIndex(true, inode.Blocks[i]);
 	}
 
 	size_t blockNeeded = std::ceil((double)length / SIZE_OF_BLOCK);
 
-	for (int i = 0; i < blockNeeded-1; ++i)
+	for (int i = 0; i < blockNeeded; ++i)
 	{
+		size_t sizeToWrite = std::min(SIZE_OF_BLOCK, (size_t)(length - SIZE_OF_BLOCK * i));
 		offset_t blockOffset = GetFreeBlockOffset();
-		m_blockDevice.Write(content + (SIZE_OF_BLOCK * i), blockOffset, SIZE_OF_BLOCK);
+		SetBlockStateByOffset(false, blockOffset);
+		m_blockDevice.Write(content + (SIZE_OF_BLOCK * i), blockOffset, sizeToWrite);
+		inode.Blocks[i] = GetBlockIndexFromOffset(blockOffset);
 	}
-
-	if (blockNeeded > 1 && (double)length / SIZE_OF_BLOCK == blockNeeded)
-	{
-		offset_t blockOffset = GetFreeBlockOffset();
-		m_blockDevice.Write(content + (SIZE_OF_BLOCK * (blockNeeded - 1)), blockOffset, SIZE_OF_BLOCK * ((double)length / SIZE_OF_BLOCK));
-	}
+	 
+	inode.Length = contentVec.size();
+	SetInodeFromOffset(inodesOffset, inode);
 }
 
 offset_t FileSystem::GetFreeBlockOffset()
@@ -159,10 +164,10 @@ void FileSystem::WriteIntoBlockFromOffset(const byte* const data, const offset_t
 	m_blockDevice.Write(data, offset, count);
 }
 
-void FileSystem::SetBlockStateByOffset(const bool state, const offset_t offset)
+void FileSystem::SetBlockStateByOffset(const bool isFree, const offset_t offset)
 {
 	offset_t blockInBitmapOffset = BLOCK_BITMAP_OFFEST + ((offset - BLOCKS_START_OFFEST) / SIZE_OF_BLOCK);
-	m_blockDevice.Write(reinterpret_cast<const byte*>(&state), offset, 1);
+	m_blockDevice.Write(reinterpret_cast<const byte*>(&isFree), offset, 1);
 }
 
 void FileSystem::WriteIntoBlockFromIndex(const byte* const data, const offset_t index, const size_t count)
@@ -179,10 +184,10 @@ offset_t FileSystem::GetBlockIndexFromOffset(const offset_t offset)
 	return (offset - BLOCKS_START_OFFEST) / SIZE_OF_BLOCK;
 }
 
-void FileSystem::SetBlockStateByIndex(const bool state, const offset_t index)
+void FileSystem::SetBlockStateByIndex(const bool isFree, const offset_t index)
 {
 	offset_t offset = GetBlockOffsetFromIndex(index);
-	SetBlockStateByOffset(state, offset);
+	SetBlockStateByOffset(isFree, offset);
 }
 
 void FileSystem::CreateDirEntry(const std::string& path, const bool isDir)
@@ -249,7 +254,7 @@ void FileSystem::SetFilesToDir(const std::unordered_map<std::string, size_t>& di
 		}
 	}
 
-	SetInodeContent(GetInodeOffsetFromIndex(inodeIndex), dirRawContent);
+	SetInodeContent(GetInodeOffsetFromIndex(dirInodeIndex), dirRawContent);
 }
 
 std::unordered_map<std::string, size_t> FileSystem::GetEntriesFromDir(const offset_t indexOfDirInode)
@@ -303,7 +308,7 @@ std::vector<byte> FileSystem::GetInodesBlocksContent(const offset_t inodesOffset
 	{
 		for (int j = 0; j < SIZE_OF_BLOCK && len; ++j, --len)
 		{
-			m_blockDevice.Read(&currByte, inode.Blocks[i], 1);
+			m_blockDevice.Read(&currByte, GetBlockOffsetFromIndex(inode.Blocks[i]) + j, 1);
 			blockContentVec.push_back(currByte);
 		}
 	}
@@ -311,7 +316,7 @@ std::vector<byte> FileSystem::GetInodesBlocksContent(const offset_t inodesOffset
 	return blockContentVec;
 }
 
-size_t FileSystem::GetInodeIndexFromPath(const std::string& path, const size_t inodeIndex = 0)
+size_t FileSystem::GetInodeIndexFromPath(const std::string& path, const size_t inodeIndex)
 {
 	if (path.empty())
 		throw PathException("Path can't be empty");

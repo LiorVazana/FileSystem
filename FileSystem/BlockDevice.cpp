@@ -1,7 +1,7 @@
 #include "BlockDevice.h"
 
-BlockDevice::BlockDevice(const std::string& deviceName, const size_t size)
-	:	m_deviceName(deviceName), m_size(size), m_deviceStream(deviceName, std::fstream::binary)
+BlockDevice::BlockDevice(const std::string& devicePath, const size_t size)
+	:	m_deviceName(devicePath), m_size(size), m_deviceStream(devicePath, std::fstream::in | std::fstream::out | std::fstream::trunc)
 {
 	if (!m_deviceStream)
 	{
@@ -23,6 +23,8 @@ void BlockDevice::Write(const byte* const buff, const size_t offset, const size_
 	{
 		m_deviceStream << buff[i];
 	}
+
+	m_deviceStream.flush();
 }
 
 void BlockDevice::Read(byte* const buff, const size_t offset, const size_t count)
@@ -36,4 +38,6 @@ void BlockDevice::Read(byte* const buff, const size_t offset, const size_t count
 	{
 		m_deviceStream >> buff[i];
 	}
+
+	m_deviceStream.flush();
 }

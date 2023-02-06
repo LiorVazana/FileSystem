@@ -9,7 +9,7 @@ class BlockDevice
 {
 public:
 	// C'tor
-	BlockDevice(const std::string& deviceName, const size_t size);
+	BlockDevice(const std::string& devicePath, const size_t size);
 
 	void Write(const byte* const buff, const size_t offset, const size_t count);
 	void Read(byte* const buff, const size_t offset, const size_t count);
