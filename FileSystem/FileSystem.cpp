@@ -22,6 +22,20 @@ FileSystem::FileSystem(const std::string& deviceName)
 	}
 }
 
+std::vector<std::string> FileSystem::GetDirEntries(const std::string& path)
+{
+	std::vector<std::string> entries;
+	size_t inodeIndex = GetInodeIndexFromPath(path);
+	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir(inodeIndex);
+
+	for (const auto& pair : dirEnries)
+	{
+		entries.push_back(pair.first);
+	}
+
+	return entries;
+}
+
 Inode FileSystem::GetInodeFromIndex(offset_t index)
 {
 	if (index >= NUM_OF_INODES || index < 0)
@@ -158,11 +172,23 @@ void FileSystem::SetBlockStateByIndex(const bool state, const offset_t index)
 	SetBlockStateByOffset(state, offset);
 }
 
-offset_t FileSystem::CreateDirEntry(const std::string& entryName, const bool isDir, const offset_t indexOfDirInode)
+void FileSystem::CreateDirEntry(const std::string& path, const bool isDir)
+{
+	size_t lastSepIndex = path.find_last_of('/');
+
+	std::string beforeSep = path.substr(0, lastSepIndex);
+	std::string afterSep = path.substr(lastSepIndex + 1);
+
+	size_t indexOfDirInode = beforeSep.empty() ? 0 : GetInodeIndexFromPath(beforeSep);
+
+	CreateDirEntry(afterSep, isDir, indexOfDirInode);
+}
+
+void FileSystem::CreateDirEntry(const std::string& entryName, const bool isDir, const offset_t indexOfDirInode)
 {	
 	// read the dir that should contain the file and search for one with the same name
 	Inode dirInode = GetInodeFromIndex(indexOfDirInode);
-	std::unordered_map<std::string, size_t> dirEntries = GetFilesFromDir(indexOfDirInode);
+	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir(indexOfDirInode);
 
 	if (dirEntries.count(entryName) != 0)
 		throw PathException("File with this name is already exist.");
@@ -172,7 +198,7 @@ offset_t FileSystem::CreateDirEntry(const std::string& entryName, const bool isD
 	Inode newInode = GetInodeFromOffset(newInodeOffset);
 
 	newInode.InodeType = isDir ? InodeType::DIR : InodeType::FILE;
-	dirEntries[entryName] == GetInodeIndexFromOffset(newInodeOffset);
+	dirEntries[entryName] = GetInodeIndexFromOffset(newInodeOffset);
 
 	newInode.DateCreated = time(nullptr);
 	newInode.LastModified = time(nullptr);
@@ -213,7 +239,7 @@ void FileSystem::SetFilesToDir(const std::unordered_map<std::string, size_t>& di
 	SetInodeContent(GetInodeOffsetFromIndex(inodeIndex), dirRawContent);
 }
 
-std::unordered_map<std::string, size_t> FileSystem::GetFilesFromDir(const offset_t indexOfDirInode)
+std::unordered_map<std::string, size_t> FileSystem::GetEntriesFromDir(const offset_t indexOfDirInode)
 {
 	if (GetInodeFromIndex(indexOfDirInode).InodeType != InodeType::DIR)
 		throw InvalidInput("Index of the the inode isn't a directory inode.");
@@ -270,4 +296,34 @@ std::vector<byte> FileSystem::GetInodesBlocksContent(const offset_t inodesOffset
 	}
 
 	return blockContentVec;
+}
+
+size_t FileSystem::GetInodeIndexFromPath(const std::string& path, const size_t inodeIndex = 0)
+{
+	if (path.empty())
+		throw PathException("Path can't be empty");
+
+	if (path == "/")
+		return 0;
+	
+	char sep = '/';
+	size_t sepIndex = path.find_first_of('/');
+
+	std::string beforeSep = path.substr(0, sepIndex);
+	std::string afterSep  = path.substr(sepIndex + 1);
+
+	if (beforeSep.empty())
+		return GetInodeIndexFromPath(afterSep, inodeIndex);
+
+	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir();
+
+	if (dirEntries.count(beforeSep) == 0)
+		throw PathException("Unknown entry '" + beforeSep + "'");
+
+	size_t entryInodeIndex = dirEntries[beforeSep];
+
+	if (afterSep.empty())
+		return entryInodeIndex;
+
+	return GetInodeIndexFromPath(afterSep, entryInodeIndex);
 }

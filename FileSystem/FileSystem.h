@@ -14,6 +14,10 @@ public:
 	// C'tor
 	FileSystem(const std::string& deviceName);
 
+	void CreateDirEntry(const std::string& path, const bool isDir);
+	std::vector<std::string> GetDirEntries(const std::string& path);
+
+private:
 	// Inode with index accessing
 	Inode GetInodeFromIndex(offset_t index);
 	offset_t GetInodeOffsetFromIndex(const offset_t index);
@@ -37,10 +41,11 @@ public:
 	offset_t GetBlockIndexFromOffset(const offset_t offset);
 	void SetBlockStateByIndex(const bool isTaken, const offset_t index);
 
-	offset_t CreateDirEntry(const std::string& entryName, const bool isDir, const offset_t indexOfDirInode);
+	void CreateDirEntry(const std::string& entryName, const bool isDir, const offset_t indexOfDirInode);
 	void SetFilesToDir(const std::unordered_map<std::string, size_t>& dirEntries, const size_t dirInodeIndex);
-	std::unordered_map<std::string, size_t> GetFilesFromDir(const offset_t indexOfDirInode);
+	std::unordered_map<std::string, size_t> GetEntriesFromDir(const offset_t indexOfDirInode);
 	std::vector<byte> GetInodesBlocksContent(const offset_t inodesOffset);
+	size_t GetInodeIndexFromPath(const std::string& path, const size_t inodeIndex = 0);
 
 private:
 	BlockDevice m_blockDevice;
