@@ -19,9 +19,11 @@ private:
 	void Mkdir(const std::string& path);
 	void Touch(const std::string& path);
 	void Ls(const std::string& path);
+	void Format(const std::string& type);
 
 private:
 	typedef void(Shell::*CommandHandler)(const std::string&);
-	std::unordered_map<std::string, CommandHandler> m_commandsHandlers = { {"cat", &Shell::Cat}, {"edit", &Shell::Edit}, {"mkdir", &Shell::Mkdir}, {"touch", &Shell::Touch}, {"ls", &Shell::Ls} };
+	std::unordered_map<std::string, CommandHandler> m_commandsHandlers = { {"cat", &Shell::Cat}, {"edit", &Shell::Edit}, {"mkdir", &Shell::Mkdir}, {"touch", &Shell::Touch},
+																		   {"ls", &Shell::Ls}, {"format", &Shell::Format} };
 	FileSystem& m_fileSystem;
 };

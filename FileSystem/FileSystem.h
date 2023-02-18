@@ -19,6 +19,11 @@ public:
 	std::vector<byte> GetFileContent(const std::string& path);                       // Get the file content
 	void SetFileContent(const std::string& path, const std::vector<byte>& data);     // Update the file contant
 	bool IsDir(const std::string& path);                                             // check if the entry is directory
+	void SoftFormat();
+	void HardFormat();
+
+	void check();
+
 
 private:
 	// Inode with index accessing
@@ -49,6 +54,7 @@ private:
 	std::unordered_map<std::string, size_t> GetEntriesFromDir(const offset_t indexOfDirInode);
 	std::vector<byte> GetInodesBlocksContent(const offset_t inodesOffset);
 	size_t GetInodeIndexFromPath(const std::string& path, const size_t inodeIndex = 0);
+
 
 private:
 	BlockDevice m_blockDevice;

@@ -10,28 +10,35 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	FileSystem fileSystem(argv[1]);
-	Shell shell(fileSystem);
-
-	const std::string EXIT_COMMAND = "exit";
-	std::string input = "";
-
-	std::cout << ">> ";
-	std::getline(std::cin, input);
-
-	while (input != EXIT_COMMAND)
+	try
 	{
-		try
-		{
-			shell.ExecuteCommand(input);
-		}
-		catch (const FileSystemException& e)
-		{
-			std::cerr << e.what() << std::endl;
-		}
+		FileSystem fileSystem(argv[1]);
+		Shell shell(fileSystem);
+
+		const std::string EXIT_COMMAND = "exit";
+		std::string input = "";
 
 		std::cout << ">> ";
 		std::getline(std::cin, input);
+
+		while (input != EXIT_COMMAND)
+		{
+			try
+			{
+				shell.ExecuteCommand(input);
+			}
+			catch (const FileSystemException& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
+
+			std::cout << ">> ";
+			std::getline(std::cin, input);
+		}
+	}
+	catch (const FileSystemException& e)
+	{
+		std::cerr << e.what() << std::endl;
 	}
 
 	return 0;

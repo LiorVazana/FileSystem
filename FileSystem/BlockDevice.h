@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include "InvalidInput.h"
+#include "Inode.h"
 
 typedef char byte;
 

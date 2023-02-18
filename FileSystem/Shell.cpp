@@ -60,3 +60,14 @@ void Shell::Ls(const std::string& path)
 		std::cout << entry << std::endl;
 	}
 }
+
+void Shell::Format(const std::string& type)
+{
+	if (type != "soft" || type != "hard")
+		throw InvalidInput("Usage: format [soft/hard]");
+
+	if (type == "soft")
+		m_fileSystem.SoftFormat();
+	else
+		m_fileSystem.HardFormat();
+}
