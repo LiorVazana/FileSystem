@@ -3,24 +3,28 @@
 FileSystem::FileSystem(const std::string& devicePath)
 	:	m_blockDevice(devicePath, BLOCK_DEVICE_SIZE)
 {
-	if (GetInodeFromIndex(0).InodeType == Inode::DIR)
+	if (GetInodeFromIndex(0).InodeType == InodeType::DIR)
 		return;
 
 	SoftFormat();
 }
 
-std::vector<std::string> FileSystem::GetDirEntries(const std::string& path)
+std::vector<Entry> FileSystem::GetDirEntries(const std::string& path)
 {
-	std::vector<std::string> entries;
+	std::vector<Entry> entries;
 	size_t inodeIndex = GetInodeIndexFromPath(path);
 	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir(inodeIndex);
+	Inode inode;
+	Entry entry;
 
 	for (const auto& pair : dirEntries)
 	{
-		if(GetInodeFromIndex(pair.second).InodeType == Inode::DIR)
-			entries.push_back(pair.first + "/");
-		else
-			entries.push_back(pair.first);
+		inode = GetInodeFromIndex(pair.second);
+		entry.IsDir = inode.InodeType == InodeType::DIR;
+		entry.Name = pair.first;
+		entry.Length = inode.Length;
+
+		entries.push_back(entry);
 	}
 
 	return entries;
@@ -38,7 +42,7 @@ void FileSystem::SetFileContent(const std::string& path, const std::vector<byte>
 
 bool FileSystem::IsDir(const std::string& path)
 {
-	return GetInodeFromIndex(GetInodeIndexFromPath(path)).InodeType == Inode::DIR;
+	return GetInodeFromIndex(GetInodeIndexFromPath(path)).InodeType == InodeType::DIR;
 }
 
 void FileSystem::SoftFormat()
@@ -46,7 +50,7 @@ void FileSystem::SoftFormat()
 	Inode defaultInode;
 	Inode firstDir;
 
-	firstDir.InodeType = Inode::DIR;
+	firstDir.InodeType = InodeType::DIR;
 
 	SetInodeFromIndex(0, firstDir);
 
@@ -97,7 +101,7 @@ offset_t FileSystem::GetFreeInodeOffset()
 {
 	for (int i = 0; i < NUM_OF_INODES; ++i)
 	{
-		if (GetInodeFromOffset(i * sizeof(Inode)).InodeType == Inode::FREE)
+		if (GetInodeFromOffset(i * sizeof(Inode)).InodeType == InodeType::FREE)
 			return i * sizeof(Inode);
 	}
 
@@ -228,7 +232,7 @@ void FileSystem::CreateDirEntry(const std::string& entryName, const bool isDir, 
 	offset_t newInodeOffset = GetFreeInodeOffset();
 	Inode newInode = GetInodeFromOffset(newInodeOffset);
 
-	newInode.InodeType = isDir ? Inode::DIR : Inode::FILE;
+	newInode.InodeType = isDir ? InodeType::DIR : InodeType::FILE;
 	SetInodeFromOffset(newInodeOffset, newInode);
 
 	dirEntries[entryName] = GetInodeIndexFromOffset(newInodeOffset);
@@ -240,7 +244,7 @@ void FileSystem::CreateDirEntry(const std::string& entryName, const bool isDir, 
 
 void FileSystem::SetFilesToDir(const std::unordered_map<std::string, size_t>& dirEntries, const size_t dirInodeIndex)
 {
-	if (GetInodeFromIndex(dirInodeIndex).InodeType != Inode::DIR)
+	if (GetInodeFromIndex(dirInodeIndex).InodeType != InodeType::DIR)
 		throw InvalidInput("Index of the the inode isn't a directory inode.");
 
 	std::vector<byte> dirRawContent;
@@ -273,7 +277,7 @@ void FileSystem::SetFilesToDir(const std::unordered_map<std::string, size_t>& di
 std::unordered_map<std::string, size_t> FileSystem::GetEntriesFromDir(const offset_t indexOfDirInode)
 {
 	Inode inode = GetInodeFromIndex(indexOfDirInode);
-	if (GetInodeFromIndex(indexOfDirInode).InodeType != Inode::DIR)
+	if (GetInodeFromIndex(indexOfDirInode).InodeType != InodeType::DIR)
 		throw InvalidInput("Index of the the inode isn't a directory inode.");
 
 	std::vector<byte> content = GetInodesBlocksContent(GetInodeOffsetFromIndex(indexOfDirInode));
@@ -358,14 +362,4 @@ size_t FileSystem::GetInodeIndexFromPath(const std::string& path, const size_t i
 		return entryInodeIndex;
 
 	return GetInodeIndexFromPath(afterSep, entryInodeIndex);
-}
-
-void FileSystem::check()
-{
-	Inode inode;
-	inode.InodeType = Inode::DIR;
-	inode.Length = 12;
-	SetInodeFromIndex(4, inode);
-
-	Inode inode2 = GetInodeFromIndex(4);
 }

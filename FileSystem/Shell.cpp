@@ -1,4 +1,4 @@
-#include "Shell.h"
+﻿#include "Shell.h"
 
 Shell::Shell(FileSystem& fileSystem)
 	:	m_fileSystem(fileSystem)
@@ -53,11 +53,11 @@ void Shell::Touch(const std::string& path)
 
 void Shell::Ls(const std::string& path)
 {
-	std::vector<std::string> entries = m_fileSystem.GetDirEntries(path);
+	std::vector<Entry> entries = m_fileSystem.GetDirEntries(path);
 
-	for (const std::string& entry : entries)
+	for (const Entry& entry : entries)
 	{
-		std::cout << entry << std::endl;
+		std::cout << entry.Name  << (entry.IsDir ? "/" : "") << std::endl;
 	}
 }
 
@@ -70,4 +70,43 @@ void Shell::Format(const std::string& type)
 		m_fileSystem.SoftFormat();
 	else
 		m_fileSystem.HardFormat();
+}
+
+void Shell::Tree(const std::string& path, const std::wstring& prefix)
+{
+	std::vector<Entry> entries = m_fileSystem.GetDirEntries(path);
+
+	for (int i = 0; i < entries.size(); ++i)
+	{
+		const Entry& currEntry = entries[i];
+		std::wstring entryPrefix = prefix;
+
+		if (i == entries.size() - 1)
+			entryPrefix += L"└── ";
+		else
+			entryPrefix += L"├── ";
+
+		std::wcout << entryPrefix;
+		std::cout << currEntry.Name << std::endl;
+
+		if (currEntry.IsDir) 
+		{
+			std::wstring dirPrefix = prefix;
+
+			if (i == entries.size() - 1)
+				dirPrefix += L"    ";
+			else
+				dirPrefix += L"│   ";
+
+			Tree(path + "/" + currEntry.Name, dirPrefix);
+		}
+	}
+}
+
+void Shell::Tree(const std::string& path)
+{
+	setlocale(LC_ALL, "en_US.UTF-8");
+
+	std::cout << path << std::endl;
+	Tree(path, L"");
 }
