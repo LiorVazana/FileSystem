@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <cmath>
 #include "BlockDevice.h"
 #include "Inode.h"
 #include "PathException.h"

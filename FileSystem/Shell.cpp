@@ -38,7 +38,13 @@ void Shell::Cat(const std::string& path)
 
 void Shell::Edit(const std::string& path)
 {
+	std::string line;
+	std::vector<byte> fileContent;
 
+	while (getline(std::cin, line) && !std::cin.eof())
+	{
+		fileContent.insert(fileContent.end(), line.begin(), line.end());
+	}
 }
 
 void Shell::Mkdir(const std::string& path)

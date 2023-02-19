@@ -11,7 +11,7 @@ enum class InodeType
 
 struct Inode
 {
-	InodeType InodeType = InodeType::FREE;
+	InodeType Type = InodeType::FREE;
 	size_t Length = 0;
 	size_t Blocks[BLOCKS_IN_INODE] = { 0 };
 }; 
