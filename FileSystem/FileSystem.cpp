@@ -30,6 +30,20 @@ std::vector<Entry> FileSystem::GetDirEntries(const std::string& path)
 	return entries;
 }
 
+Entry FileSystem::GetFileEntry(const std::string& path)
+{
+	Inode inode;
+	Entry entry;
+
+	size_t inodeIndex = GetInodeIndexFromPath(path);
+	inode = GetInodeFromIndex(inodeIndex);
+	entry.IsDir = inode.Type == InodeType::DIR;
+	entry.Name = path.substr(path.find_last_of('/') + 1);
+	entry.Length = inode.Length;
+
+	return entry;
+}
+
 std::vector<byte> FileSystem::GetFileContent(const std::string& path)
 {
 	return GetInodesBlocksContent(GetInodeOffsetFromIndex(GetInodeIndexFromPath(path)));
@@ -67,6 +81,8 @@ void FileSystem::SoftFormat()
 
 void FileSystem::HardFormat()
 {
+	m_blockDevice.Format();
+	SoftFormat();
 }
 
 Inode FileSystem::GetInodeFromIndex(const offset_t index)

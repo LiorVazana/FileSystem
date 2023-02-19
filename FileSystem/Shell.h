@@ -24,6 +24,9 @@ private:
 	void Tree(const std::string& path);
 
 private:
+	std::string GetAbsolutePath(const std::string& path);
+
+private:
 	typedef void(Shell::*CommandHandler)(const std::string&);
 	std::unordered_map<std::string, CommandHandler> m_commandsHandlers = { {"cat", &Shell::Cat}, {"edit", &Shell::Edit}, {"mkdir", &Shell::Mkdir}, {"touch", &Shell::Touch},
 																		   {"ls", &Shell::Ls}, {"format", &Shell::Format}, {"tree", &Shell::Tree} };

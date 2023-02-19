@@ -14,6 +14,7 @@ public:
 
 	void Write(const byte* const buff, const size_t offset, const size_t count);
 	void Read(byte* const buff, const size_t offset, const size_t count);
+	void Format();
 
 
 private:

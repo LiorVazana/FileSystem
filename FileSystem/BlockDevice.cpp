@@ -7,13 +7,7 @@ BlockDevice::BlockDevice(const std::string& devicePath, const size_t size)
 	size_t fileSize = m_deviceStream.tellg();
 
 	if (fileSize != size)
-	{
-		for (int i = 0; i < size; ++i)
-		{
-			m_deviceStream << '\0';
-		}
-	}
-	
+		Format();
 }
 
 void BlockDevice::Write(const byte* const buff, const size_t offset, const size_t count)
@@ -26,11 +20,6 @@ void BlockDevice::Write(const byte* const buff, const size_t offset, const size_
 	m_deviceStream.seekp(offset);
 	m_deviceStream.write(buff, count);
 
-	/*for (int i = 0; i < count; ++i)
-	{
-		m_deviceStream << buff[i];
-	}*/
-
 	m_deviceStream.flush();
 }
 
@@ -42,10 +31,15 @@ void BlockDevice::Read(byte* const buff, const size_t offset, const size_t count
 	m_deviceStream.seekg(offset);
 	m_deviceStream.read(buff, count);
 
-	//for (int i = 0; i < count; ++i)
-	//{
-	//	m_deviceStream >> buff[i];
-	//}
-
 	m_deviceStream.flush();
+}
+
+void BlockDevice::Format()
+{
+	m_deviceStream.seekp(0);
+
+	for (int i = 0; i < m_size; ++i)
+	{
+		m_deviceStream << '\0';
+	}
 }
