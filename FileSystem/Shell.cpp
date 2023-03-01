@@ -5,24 +5,26 @@ Shell::Shell(FileSystem& fileSystem)
 {
 }
 
-void Shell::ExecuteCommand(const std::string& command)
+void Shell::ExecuteCommand(const std::string& path)
 {
-	if (command.empty())
+	if (path.empty())
 		return;
 
-	size_t sepIndex = command.find_first_of(' ');
-	std::string commandName = command.substr(0, sepIndex);
-	std::string arg = sepIndex == std::string::npos ? "" : command.substr(sepIndex + 1);
+	size_t sepIndex = path.find_first_of(' ');
+	std::string commandName = path.substr(0, sepIndex);
+	std::string arg = sepIndex == std::string::npos ? "" : path.substr(sepIndex + 1);
+	std::vector<std::string> argsVec;
+	argsVec.push_back(arg);
 
 	if (m_commandsHandlers.count(commandName) == 0)
 		throw InvalidInput("Command doesn't supported");
 
-	(this->*m_commandsHandlers[commandName])(arg);
+	(this->*m_commandsHandlers[commandName])(argsVec);
 }
 
-void Shell::Cat(const std::string& path)
+void Shell::Cat(const std::vector<std::string>& argVec)
 {
-	std::string absolutePath = GetAbsolutePath(path);
+	std::string absolutePath = GetAbsolutePath(argVec[0]);
 
 	if (m_fileSystem.IsDir(absolutePath))
 		throw PathException("Can't use cat command on directory");
@@ -35,12 +37,14 @@ void Shell::Cat(const std::string& path)
 	}
 }
 
-void Shell::Edit(const std::string& path)
+void Shell::Edit(const std::vector<std::string>& argVec)
 {
+	cls(argVec);
+
 	std::string line;
 	std::vector<byte> fileContent;
 
-	if (m_fileSystem.GetFileEntry(path).IsDir)
+	if (m_fileSystem.GetFileEntry(argVec[0]).IsDir)
 		throw InvalidInput("'Edit' can be used only for files");
 
 	std::cout << "-----------------------------------------------------------------------------" << std::endl;
@@ -58,45 +62,47 @@ void Shell::Edit(const std::string& path)
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max());
 	std::cin.clear();
 
-	m_fileSystem.SetFileContent(GetAbsolutePath(path), fileContent);
+	m_fileSystem.SetFileContent(GetAbsolutePath(argVec[0]), fileContent);
+
+	cls(argVec);
 }
 
-void Shell::Mkdir(const std::string& path)
+void Shell::Mkdir(const std::vector<std::string>& argVec)
 {
-	m_fileSystem.CreateDirEntry(GetAbsolutePath(path), true);
+	m_fileSystem.CreateDirEntry(GetAbsolutePath(argVec[0]), true);
 }
 
-void Shell::Touch(const std::string& path)
+void Shell::Touch(const std::vector<std::string>& argVec)
 {
-	m_fileSystem.CreateDirEntry(GetAbsolutePath(path), false);
+	m_fileSystem.CreateDirEntry(GetAbsolutePath(argVec[0]), false);
 }
 
-void Shell::Ls(const std::string& path)
+void Shell::Ls(const std::vector<std::string>& argVec)
 {
-	std::vector<Entry> entries = m_fileSystem.GetDirEntries(GetAbsolutePath(path));
+	std::vector<Entry> entries = m_fileSystem.GetDirEntries(GetAbsolutePath(argVec[0]));
 
 	std::cout << "Total Entries: " << entries.size() << std::endl;
 
 	for (const Entry& entry : entries)
 	{
-		std::cout << entry.Name  << (entry.IsDir ? " (Dir)" : " (File)") << std::endl;
+		std::cout << entry.Name << (entry.IsDir ? " (Dir)" : " (File)") << std::endl;
 	}
 }
 
-void Shell::Format(const std::string& type)
+void Shell::Format(const std::vector<std::string>& argVec)
 {
-	if (type != "soft" && type != "hard")
+	if (argVec[0] != "soft" && argVec[0] != "hard")
 		throw InvalidInput("Usage: format [soft/hard]");
 
-	if (type == "soft")
+	if (argVec[0] == "soft")
 		m_fileSystem.SoftFormat();
 	else
 		m_fileSystem.HardFormat();
 }
 
-void Shell::Tree(const std::string& path, const std::wstring& prefix)
+void Shell::Tree(const std::vector<std::string>& argVec, const std::wstring& prefix)
 {
-	std::vector<Entry> entries = m_fileSystem.GetDirEntries(path);
+	std::vector<Entry> entries = m_fileSystem.GetDirEntries(argVec[0]);
 
 	for (int i = 0; i < entries.size(); ++i)
 	{
@@ -111,7 +117,7 @@ void Shell::Tree(const std::string& path, const std::wstring& prefix)
 		std::wcout << entryPrefix;
 		std::cout << currEntry.Name << (currEntry.IsDir ? " (Dir)" : " (File)") << std::endl;
 
-		if (currEntry.IsDir) 
+		if (currEntry.IsDir)
 		{
 			std::wstring dirPrefix = prefix;
 
@@ -120,19 +126,29 @@ void Shell::Tree(const std::string& path, const std::wstring& prefix)
 			else
 				dirPrefix += L"│   ";
 
-			Tree(path + "/" + currEntry.Name, dirPrefix);
+			std::vector<std::string> newArgVec;
+			newArgVec.push_back(argVec[0] + "/" + currEntry.Name);
+			Tree(newArgVec, dirPrefix);
 		}
 	}
 }
 
-void Shell::Tree(const std::string& path)
+void Shell::Tree(const std::vector<std::string>& argVec)
 {
-	std::string absoluePath = GetAbsolutePath(path);
+	std::string absoluePath = GetAbsolutePath(argVec[0]);
 
 	setlocale(LC_ALL, "en_US.UTF-8");
 
 	std::cout << absoluePath << std::endl;
-	Tree(absoluePath, L"");
+
+	std::vector<std::string> newArgVec;
+	newArgVec.push_back(argVec[0]);
+	Tree(newArgVec, L"");
+}
+
+void Shell::cls(const std::vector<std::string>& argVec)
+{
+	system("cls");
 }
 
 std::string Shell::GetAbsolutePath(const std::string& path)

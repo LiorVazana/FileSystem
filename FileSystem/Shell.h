@@ -11,24 +11,25 @@ class Shell
 public:
 	// C'tor
 	Shell(FileSystem& fileSystem);
-	void ExecuteCommand(const std::string& command);
+	void ExecuteCommand(const std::string& path);
 
 private:
-	void Cat(const std::string& path);
-	void Edit(const std::string& path);
-	void Mkdir(const std::string& path);
-	void Touch(const std::string& path);
-	void Ls(const std::string& path);
-	void Format(const std::string& type);
-	void Tree(const std::string& path, const std::wstring& prefix);
-	void Tree(const std::string& path);
+	void Cat(const std::vector<std::string>& argVec);
+	void Edit(const std::vector<std::string>& argVec);
+	void Mkdir(const std::vector<std::string>& argVec);
+	void Touch(const std::vector<std::string>& argVec);
+	void Ls(const std::vector<std::string>& argVec);
+	void Format(const std::vector<std::string>& argVec);
+	void Tree(const std::vector<std::string>& argVec, const std::wstring& prefix);
+	void Tree(const std::vector<std::string>& argVec);
+	void cls(const std::vector<std::string>& argVec);
 
 private:
 	std::string GetAbsolutePath(const std::string& path);
 
 private:
-	typedef void(Shell::*CommandHandler)(const std::string&);
+	typedef void(Shell::*CommandHandler)(const std::vector<std::string>&);
 	std::unordered_map<std::string, CommandHandler> m_commandsHandlers = { {"cat", &Shell::Cat}, {"edit", &Shell::Edit}, {"mkdir", &Shell::Mkdir}, {"touch", &Shell::Touch},
-																		   {"ls", &Shell::Ls}, {"format", &Shell::Format}, {"tree", &Shell::Tree} };
+																		   {"ls", &Shell::Ls}, {"format", &Shell::Format}, {"tree", &Shell::Tree}, {"cls", &Shell::cls}};
 	FileSystem& m_fileSystem;
 };
