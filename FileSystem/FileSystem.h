@@ -18,7 +18,8 @@ public:
 
 	void CreateDirEntry(const std::string& path, const bool isDir);                  // Create file / directory
 	std::vector<Entry> GetDirEntries(const std::string& path);						 // Get all files in given directory
-	Entry GetFileEntry(const std::string& path);									 // 
+	void RemoveEntry(const std::string& path);
+	Entry GetFileEntry(const std::string& path);									 // Get File Entry
 	std::vector<byte> GetFileContent(const std::string& path);                       // Get the file content
 	void SetFileContent(const std::string& path, const std::vector<byte>& data);     // Update the file contant
 	bool IsDir(const std::string& path);                                             // check if the entry is directory

@@ -151,6 +151,18 @@ void Shell::cls(const std::vector<std::string>& argVec)
 	system("cls");
 }
 
+void Shell::rm(const std::vector<std::string>& argVec)
+{
+	for (const std::string& entryName : argVec)
+	{
+		m_fileSystem.RemoveEntry(entryName);
+	}	
+}
+
+void Shell::rmdir(const std::vector<std::string>& argVec)
+{
+}
+
 std::string Shell::GetAbsolutePath(const std::string& path)
 {
 	std::string absolutePath = path;

@@ -23,6 +23,8 @@ private:
 	void Tree(const std::vector<std::string>& argVec, const std::wstring& prefix);
 	void Tree(const std::vector<std::string>& argVec);
 	void cls(const std::vector<std::string>& argVec);
+	void rm(const std::vector<std::string>& argVec);
+	void rmdir(const std::vector<std::string>& argVec);
 
 private:
 	std::string GetAbsolutePath(const std::string& path);
@@ -30,6 +32,7 @@ private:
 private:
 	typedef void(Shell::*CommandHandler)(const std::vector<std::string>&);
 	std::unordered_map<std::string, CommandHandler> m_commandsHandlers = { {"cat", &Shell::Cat}, {"edit", &Shell::Edit}, {"mkdir", &Shell::Mkdir}, {"touch", &Shell::Touch},
-																		   {"ls", &Shell::Ls}, {"format", &Shell::Format}, {"tree", &Shell::Tree}, {"cls", &Shell::cls}};
+																		   {"ls", &Shell::Ls}, {"format", &Shell::Format}, {"tree", &Shell::Tree}, {"cls", &Shell::cls}, {"rm", &Shell::rm},
+																		   {"rmdir", &Shell::rmdir}};
 	FileSystem& m_fileSystem;
 };

@@ -30,6 +30,27 @@ std::vector<Entry> FileSystem::GetDirEntries(const std::string& path)
 	return entries;
 }
 
+void FileSystem::RemoveEntry(const std::string& path)
+{
+	if (path.empty() || path[path.length() - 1] == '/')
+		throw PathException("Invalid Path: Entry not specified");
+
+	std::string fileName = path.substr(path.find_last_of('/') + 1);
+	std::string dirPath = path.substr(0, path.find_last_of('/'));
+
+	if (dirPath.empty() || dirPath == fileName)
+		dirPath = "/";
+
+	size_t inodeIndex = GetInodeIndexFromPath(dirPath);
+	std::unordered_map<std::string, size_t> dirEntries = GetEntriesFromDir(inodeIndex);
+
+	if (dirEntries.count(fileName) == 0)
+		throw PathException("PathException: given entry doesn't exist");
+
+	dirEntries.erase(path.substr(path.find_last_of('/') + 1));
+	SetFilesToDir(dirEntries, inodeIndex);
+}
+
 Entry FileSystem::GetFileEntry(const std::string& path)
 {
 	Inode inode;
