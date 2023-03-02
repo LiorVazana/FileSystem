@@ -47,6 +47,14 @@ void FileSystem::RemoveEntry(const std::string& path)
 	if (dirEntries.count(fileName) == 0)
 		throw PathException("PathException: given entry doesn't exist");
 
+	Inode entryInode = GetInodeFromIndex(GetInodeIndexFromPath(path));
+
+	if (entryInode.Type == InodeType::DIR)
+	{
+		if (GetEntriesFromDir(GetInodeIndexFromPath(fileName)).size() != 0)
+			throw PathException("PathException: can't remove a not empty directory.");
+	}
+
 	dirEntries.erase(path.substr(path.find_last_of('/') + 1));
 	SetFilesToDir(dirEntries, inodeIndex);
 }

@@ -159,10 +159,6 @@ void Shell::rm(const std::vector<std::string>& argVec)
 	}	
 }
 
-void Shell::rmdir(const std::vector<std::string>& argVec)
-{
-}
-
 std::string Shell::GetAbsolutePath(const std::string& path)
 {
 	std::string absolutePath = path;
